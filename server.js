@@ -1,8 +1,6 @@
 import { Application, Router } from "https://deno.land/x/oak/mod.ts";
 
-const usernames = {};
 const connectedClients = new Map();
-let currClientId = 0;
 
 const app = new Application();
 const port = 8080;
@@ -15,6 +13,7 @@ function broadcast(message) {
 }
 
 function broadcast_usernames() {
+    const usernames = [ ...connectedClients.keys()];
     console.log("Sending updated username list to all clients: " + JSON.stringify(usernames));
     broadcast(JSON.stringify({
         'event': 'update-users',
@@ -22,20 +21,20 @@ function broadcast_usernames() {
     }));
 }
 
-router.get('/ws_endpoint', async ctx => {
+router.get('/start_web_socket', async ctx => {
     const socket = await ctx.upgrade();
-
-    socket.onopen = () => {
-        currClientId++;
-        socket.clientId = currClientId;
-        connectedClients.set(currClientId, socket);
-        console.log(`New client connected: ${socket.clientId}`);
-    };
-
+    const username = ctx.request.url.searchParams.get('username')
+    if (connectedClients.has(username)) {
+        socket.close(1008, `Username ${username} is already taken`);
+        return;
+    }
+    socket.username = username;
+    connectedClients.set(username, socket);
+    console.log(`New client connected: ${username}`);
+   
     socket.onclose = () => {
-        console.log(`Client ID ${socket.clientId} disconnected (username: ${socket.username})`);
-        connectedClients.delete(socket.clientId);
-        delete usernames[socket.username];
+        console.log(`Client ${socket.username} disconnected`);
+        connectedClients.delete(socket.username);
         broadcast_usernames();
     };
 
@@ -45,28 +44,24 @@ router.get('/ws_endpoint', async ctx => {
 
     socket.onmessage = (m) => {
         const data = JSON.parse(m.data);
-
         switch(data.event) {
-            case 'add-user':
-                const username = data.username
-                socket.username = username; 
-                usernames[username] = true;
+            case 'login': 
                 broadcast_usernames();
                 break;
-            
-            case 'send-chat': 
+
+            case 'send-message': 
                 broadcast(JSON.stringify({
-                    'event': 'update-chat',
+                    'event': 'send-message',
                     'username': socket.username,
                     'message': data.message,
                 })); 
+                break;
         }
     };
 });
 
 app.use(router.routes());
 app.use(router.allowedMethods());
-// Send static content
 app.use(async (context) => {
     await context.send({
         root: `${Deno.cwd()}/`,

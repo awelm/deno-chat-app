@@ -1,19 +1,18 @@
 const myUsername = prompt("Please enter your name") || "Anonymous";
-let usernames = {};
-const socket = new WebSocket("ws://localhost:8080/ws_endpoint");
+const socket = new WebSocket(`ws://localhost:8080/start_web_socket?username=${myUsername}`);
 
-function addMessage(username, message, boldPrefix = false) {
-  if (boldPrefix) {
-    username = '<b>' + username + '</b>'
-  }
-  $('#conversation').append( `${username}: ${message} <br/>`);
+function addMessage(username, message) {
+  $('#conversation').append( `<b> ${username} </b>: ${message} <br/>`);
+}
+
+function socketSend(obj) {
+  socket.send(JSON.stringify(obj));
 }
 
 socket.onopen = () => {
-  socket.send(JSON.stringify({
-    'event': 'add-user',
-    'username': myUsername,
-  }));
+  socketSend({
+    'event': 'login'
+  })
 };
 
 socket.onmessage = (m) => {
@@ -21,36 +20,31 @@ socket.onmessage = (m) => {
 
   switch(data.event) {
     case 'update-users':
-      const newUsernames = data.usernames;
+      // refresh displayed user list
       $('#users').empty();
-      // update chat
-      for (const [username, _] of Object.entries(newUsernames)) {
+      for (const username of data.usernames) {
         $('#users').append('<div>' + username + '</div>');
-        if (username in usernames == false) {
-          addMessage('connected', username);
-        }
       }
-      usernames = newUsernames;
       break;
 
-    case 'update-chat':
-      addMessage(data.username, data.message, boldPrefix=true);
+    case 'send-message':
+      // display new chat message
+      addMessage(data.username, data.message);
       break;
   }
 };
 
-// on load of page
+// on page load
 $(function () {
-  // when the client hits ENTER on their keyboard
+  // when the client hits the ENTER key
   $('#data').keypress(function (e) {
     if (e.which == 13) {
       var message = $('#data').val();
       $('#data').val('');
-      // tell server to execute 'send-chat' and send along one parameter
-      socket.send(JSON.stringify({
-        'event': 'send-chat',
+      socketSend({
+        'event': 'send-message',
         'message': message,
-      }))
+      })
     }
   });
 });
