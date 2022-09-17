@@ -6,7 +6,6 @@ let currClientId = 0;
 
 const app = new Application();
 const port = 8080;
-
 const router = new Router();
 
 function broadcast(message) {
