@@ -3,12 +3,6 @@ const socket = new WebSocket(
   `ws://localhost:8080/start_web_socket?username=${myUsername}`
 );
 
-socket.onopen = () => {
-  socketSend({
-    event: "login",
-  });
-};
-
 socket.onmessage = (m) => {
   const data = JSON.parse(m.data);
 
@@ -33,10 +27,6 @@ function addMessage(username, message) {
   $("#conversation").append(`<b> ${username} </b>: ${message} <br/>`);
 }
 
-function socketSend(obj) {
-  socket.send(JSON.stringify(obj));
-}
-
 // on page load
 $(function () {
   // when the client hits the ENTER key
@@ -44,10 +34,12 @@ $(function () {
     if (e.which == 13) {
       var message = $("#data").val();
       $("#data").val("");
-      socketSend({
-        event: "send-message",
-        message: message,
-      });
+      socket.send(
+        JSON.stringify({
+          event: "send-message",
+          message: message,
+        })
+      );
     }
   });
 });

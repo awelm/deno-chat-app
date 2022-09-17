@@ -38,6 +38,11 @@ router.get("/start_web_socket", async (ctx) => {
   connectedClients.set(username, socket);
   console.log(`New client connected: ${username}`);
 
+  // broadcast the active users list when a new user logs in
+  socket.onopen = () => {
+    broadcast_usernames();
+  };
+
   // when a client disconnects, remove them from the connected clients list
   // and broadcast the active users list
   socket.onclose = () => {
@@ -46,16 +51,11 @@ router.get("/start_web_socket", async (ctx) => {
     broadcast_usernames();
   };
 
+  // broadcast new message if someone sent one
   socket.onmessage = (m) => {
     const data = JSON.parse(m.data);
     switch (data.event) {
-      case "login":
-        // broadcast the active users list when a new user logs in
-        broadcast_usernames();
-        break;
-
       case "send-message":
-        // broadcast new message if someone sent one
         broadcast(
           JSON.stringify({
             event: "send-message",
