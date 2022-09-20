@@ -1,40 +1,20 @@
 <html>
   <head>
     <title>Node Chat App</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
-    />
     <script src="/public/app.js"></script>
   </head>
   <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="collapse navbar-collapse">
-          <ul class="nav navbar-nav"></ul>
-        </div>
+    <div style="text-align: center">
+      <div>
+        <b>Users</b>
+        <hr />
+        <div id="users"></div>
+        <hr class="visible-xs visible-sm" />
       </div>
-    </div>
-
-    <div class="container">
-      <div id="dashboard">
-        <div class="row" />
-        <div class="col-md-4">
-          <b>Users</b>
-          <hr />
-          <div id="users"></div>
-          <hr class="visible-xs visible-sm" />
-        </div>
-        <div class="col-md-8">
-          <input
-            class="col-md-12 col-sm-12"
-            id="data"
-            placeholder="send message"
-          />
-          <hr />
-          <div id="conversation"></div>
-        </div>
+      <div>
+        <input id="data" placeholder="send message" />
+        <hr />
+        <div id="conversation"></div>
       </div>
     </div>
   </body>

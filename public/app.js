@@ -9,10 +9,11 @@ socket.onmessage = (m) => {
   switch (data.event) {
     case "update-users":
       // refresh displayed user list
-      $("#users").empty();
+      let userListHtml = "";
       for (const username of data.usernames) {
-        $("#users").append("<div>" + username + "</div>");
+        userListHtml += `<div> ${username} </div>`;
       }
+      document.getElementById("users").innerHTML = userListHtml;
       break;
 
     case "send-message":
@@ -24,16 +25,19 @@ socket.onmessage = (m) => {
 
 function addMessage(username, message) {
   // displays new message
-  $("#conversation").append(`<b> ${username} </b>: ${message} <br/>`);
+  document.getElementById(
+    "conversation"
+  ).innerHTML += `<b> ${username} </b>: ${message} <br/>`;
 }
 
 // on page load
-$(function () {
+window.onload = () => {
   // when the client hits the ENTER key
-  $("#data").keypress(function (e) {
-    if (e.which == 13) {
-      var message = $("#data").val();
-      $("#data").val("");
+  document.getElementById("data").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      const inputElement = document.getElementById("data");
+      var message = inputElement.value;
+      inputElement.value = "";
       socket.send(
         JSON.stringify({
           event: "send-message",
@@ -42,4 +46,4 @@ $(function () {
       );
     }
   });
-});
+};
